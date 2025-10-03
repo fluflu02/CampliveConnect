@@ -14,6 +14,10 @@ SpotFree is a progressive web app that provides real-time campground availabilit
 - ✅ Fixed query client to properly handle search parameters with URL query strings
 - ✅ Resolved status report cache invalidation to refresh list, detail, and timeline views
 - ✅ Synchronized follow state between frontend and backend with proper cache updates
+- ✅ Added "Add Campground" feature with modal form accessible from home page and campground list
+- ✅ Implemented three location input methods: click on map, enter address (with geocoding), or manual coordinates
+- ✅ Added website URL field to campground schema for campground websites
+- ✅ Integrated Google Geocoding API for address-to-coordinates conversion
 
 ## Project Architecture
 
@@ -60,6 +64,7 @@ SpotFree is a progressive web app that provides real-time campground availabilit
 - `POST /api/auth/login` - User login
 - `GET /api/campgrounds` - List campgrounds (supports ?search= query)
 - `GET /api/campgrounds/:id` - Campground details
+- `POST /api/campgrounds` - Create new campground (requires auth)
 - `GET /api/campgrounds/:id/reports` - Status report timeline
 - `POST /api/reports` - Submit status report
 - `POST /api/follow` - Follow campground
