@@ -29,7 +29,7 @@ export function MapView({ campgrounds = [], onMarkerClick }: MapViewProps) {
   }
 
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full w-full text-[15px]">
       <APIProvider apiKey={apiKey}>
         <Map
           mapId="spotfree-map"
