@@ -35,14 +35,22 @@ export const statusReports = pgTable("status_reports", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   campgroundId: varchar("campground_id").notNull().references(() => campgrounds.id, { onDelete: "cascade" }),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  status: statusEnum("status").notNull(),
+  motorhomeAvailability: integer("motorhome_availability"),
+  caravanAvailability: integer("caravan_availability"),
+  vwBusAvailability: integer("vw_bus_availability"),
+  largeTentAvailability: integer("large_tent_availability"),
+  smallTentAvailability: integer("small_tent_availability"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const operatorOverrides = pgTable("operator_overrides", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   campgroundId: varchar("campground_id").notNull().references(() => campgrounds.id, { onDelete: "cascade" }),
-  status: statusEnum("status").notNull(),
+  motorhomeAvailability: integer("motorhome_availability"),
+  caravanAvailability: integer("caravan_availability"),
+  vwBusAvailability: integer("vw_bus_availability"),
+  largeTentAvailability: integer("large_tent_availability"),
+  smallTentAvailability: integer("small_tent_availability"),
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -92,11 +100,23 @@ export const insertStatusReportSchema = createInsertSchema(statusReports).omit({
   id: true,
   createdAt: true,
   userId: true,
+}).extend({
+  motorhomeAvailability: z.number().min(0).max(100).optional(),
+  caravanAvailability: z.number().min(0).max(100).optional(),
+  vwBusAvailability: z.number().min(0).max(100).optional(),
+  largeTentAvailability: z.number().min(0).max(100).optional(),
+  smallTentAvailability: z.number().min(0).max(100).optional(),
 });
 
 export const insertOperatorOverrideSchema = createInsertSchema(operatorOverrides).omit({
   id: true,
   createdAt: true,
+}).extend({
+  motorhomeAvailability: z.number().min(0).max(100).optional(),
+  caravanAvailability: z.number().min(0).max(100).optional(),
+  vwBusAvailability: z.number().min(0).max(100).optional(),
+  largeTentAvailability: z.number().min(0).max(100).optional(),
+  smallTentAvailability: z.number().min(0).max(100).optional(),
 });
 
 export const insertFollowSchema = createInsertSchema(follows).omit({
