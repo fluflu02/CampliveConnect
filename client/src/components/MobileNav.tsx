@@ -1,15 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Map, List, Heart, User } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { useAuth } from "@/lib/auth";
 
 export function MobileNav() {
   const [location] = useLocation();
+  const { isAuthenticated } = useAuth();
 
   const navItems = [
     { icon: Map, label: "Map", href: "/map", testId: "nav-map" },
     { icon: List, label: "List", href: "/campgrounds", testId: "nav-list" },
     { icon: Heart, label: "Following", href: "/following", testId: "nav-following" },
-    { icon: User, label: "Profile", href: "/profile", testId: "nav-profile" },
+    { icon: User, label: isAuthenticated ? "Account" : "Login", href: "/login", testId: "nav-profile" },
   ];
 
   return (
