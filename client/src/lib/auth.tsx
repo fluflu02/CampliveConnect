@@ -52,18 +52,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (email: string, password: string, name: string) => {
+    console.log("Attempting registration with:", { email, name, passwordLength: password.length });
+    
     const response = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, name }),
     });
 
+    console.log("Registration response status:", response.status);
+
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json().catch(() => ({ message: "Registration failed" }));
+      console.log("Registration error:", error);
       throw new Error(error.message || "Registration failed");
     }
 
     const data = await response.json();
+    console.log("Registration successful");
     setToken(data.token);
     setUser(data.user);
     localStorage.setItem("auth_token", data.token);
