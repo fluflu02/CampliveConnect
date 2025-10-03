@@ -1,4 +1,4 @@
-# CampLive Design Guidelines
+# SpotFree Design Guidelines
 
 ## Design Approach
 **Reference-Based Design** drawing inspiration from outdoor/travel applications (Airbnb, AllTrails, Hipcamp) with emphasis on trust, community, and accessibility in outdoor environments.

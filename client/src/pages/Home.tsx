@@ -43,7 +43,7 @@ export default function Home() {
 
       <div className="max-w-7xl mx-auto px-6 py-20">
         <h2 className="font-display text-3xl md:text-4xl font-bold text-center mb-12">
-          How CampLive Works
+          How SpotFree Works
         </h2>
         
         <div className="grid md:grid-cols-3 gap-8">

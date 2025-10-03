@@ -1,7 +1,7 @@
-# CampLive - Real-Time Campground Availability Tracker
+# SpotFree - Real-Time Campground Availability Tracker
 
 ## Overview
-CampLive is a progressive web app that provides real-time campground availability through community reporting and owner verification. The platform supports multiple user roles (campers, owners, admins) with features including push notifications, Stripe subscriptions, and comprehensive moderation tools.
+SpotFree is a progressive web app that provides real-time campground availability through community reporting and owner verification. The platform supports multiple user roles (campers, owners, admins) with features including push notifications, Stripe subscriptions, and comprehensive moderation tools.
 
 **Current Status:** Core functionality complete - authentication, campground listing, community reporting, following, and admin claim management are fully operational.
 

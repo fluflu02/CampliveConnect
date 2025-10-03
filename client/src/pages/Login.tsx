@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Tent } from "lucide-react";
+import logoImage from "@assets/Logo_1759481723625.png";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -62,11 +63,8 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-muted/20">
       <div className="w-full max-w-md">
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center">
-            <Tent className="h-7 w-7 text-primary-foreground" />
-          </div>
-          <h1 className="font-display text-3xl font-bold">CampLive</h1>
+        <div className="flex items-center justify-center mb-8">
+          <img src={logoImage} alt="SpotFree" className="h-16" />
         </div>
 
         <Tabs defaultValue="login" className="w-full">
@@ -119,7 +117,7 @@ export default function Login() {
             <Card>
               <CardHeader>
                 <CardTitle>Create account</CardTitle>
-                <CardDescription>Join the CampLive community</CardDescription>
+                <CardDescription>Join the SpotFree community</CardDescription>
               </CardHeader>
               <form onSubmit={handleRegister}>
                 <CardContent className="space-y-4">
