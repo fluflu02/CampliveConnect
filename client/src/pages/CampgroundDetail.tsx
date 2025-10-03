@@ -1,48 +1,128 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ReportTimeline } from "@/components/ReportTimeline";
 import { StatusReportModal } from "@/components/StatusReportModal";
 import { MapPin, Heart, Share2, MessageSquare } from "lucide-react";
 import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useAuth } from "@/lib/auth";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useParams } from "wouter";
+import type { Campground } from "@shared/schema";
 import lakesideImage from "@assets/generated_images/Lakeside_campground_landscape_a490e214.png";
+import { formatDistanceToNow } from "date-fns";
+
+interface ReportWithUser {
+  id: string;
+  status: "available" | "full" | "unknown";
+  createdAt: string;
+  userId: string;
+  user?: {
+    name: string;
+  };
+}
 
 export default function CampgroundDetail() {
+  const { id } = useParams<{ id: string }>();
   const [isFollowing, setIsFollowing] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const { token, isAuthenticated } = useAuth();
+  const { toast } = useToast();
 
-  const reports = [
-    {
-      id: "1",
-      userName: "Sarah Chen",
-      userInitials: "SC",
-      status: "available" as const,
-      verified: true,
-      timestamp: "2h ago",
+  const { data: campground, isLoading: loadingCampground } = useQuery<Campground>({
+    queryKey: ["/api/campgrounds", id],
+    enabled: !!id,
+  });
+
+  const { data: reports, isLoading: loadingReports } = useQuery<ReportWithUser[]>({
+    queryKey: ["/api/campgrounds", id, "reports"],
+    enabled: !!id,
+  });
+
+  const followMutation = useMutation({
+    mutationFn: async () => {
+      if (!token) throw new Error("Not authenticated");
+      if (isFollowing) {
+        return apiRequest("DELETE", `/api/follow/${id}`, undefined);
+      } else {
+        return apiRequest("POST", "/api/follow", { campgroundId: id });
+      }
     },
-    {
-      id: "2",
-      userName: "Mike Johnson",
-      userInitials: "MJ",
-      status: "full" as const,
-      timestamp: "5h ago",
+    onSuccess: () => {
+      setIsFollowing(!isFollowing);
+      queryClient.invalidateQueries({ queryKey: ["/api/follows"] });
+      toast({
+        title: isFollowing ? "Unfollowed" : "Followed",
+        description: `You have ${isFollowing ? "unfollowed" : "started following"} this campground`,
+      });
     },
-    {
-      id: "3",
-      userName: "Emily Davis",
-      userInitials: "ED",
-      status: "available" as const,
-      timestamp: "8h ago",
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update follow status",
+        variant: "destructive",
+      });
     },
-  ];
+  });
+
+  const handleFollowToggle = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to follow campgrounds",
+        variant: "destructive",
+      });
+      return;
+    }
+    followMutation.mutate();
+  };
+
+  const handleReportSubmit = () => {
+    toast({
+      title: "Status reported",
+      description: "Thank you for your report!",
+    });
+  };
+
+  if (loadingCampground) {
+    return (
+      <div className="min-h-screen">
+        <Skeleton className="h-80 w-full" />
+        <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+          <Skeleton className="h-12 w-3/4" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!campground) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Campground not found</p>
+      </div>
+    );
+  }
+
+  const formattedReports = reports?.map((report) => ({
+    id: report.id,
+    userName: report.user?.name || "Anonymous",
+    userInitials: (report.user?.name || "A").substring(0, 2).toUpperCase(),
+    status: report.status,
+    verified: false,
+    timestamp: formatDistanceToNow(new Date(report.createdAt), { addSuffix: true }),
+  })) || [];
 
   return (
     <div className="min-h-screen">
       <div className="relative h-80">
         <img
-          src={lakesideImage}
-          alt="Pine Lake Campground"
+          src={campground.imageUrl || lakesideImage}
+          alt={campground.name}
           className="w-full h-full object-cover"
         />
         <div className="absolute top-4 right-4 flex gap-2">
@@ -50,10 +130,8 @@ export default function CampgroundDetail() {
             size="icon"
             variant="ghost"
             className="bg-black/30 backdrop-blur-sm text-white hover:bg-black/50"
-            onClick={() => {
-              setIsFollowing(!isFollowing);
-              console.log(isFollowing ? "Unfollowed" : "Followed");
-            }}
+            onClick={handleFollowToggle}
+            disabled={followMutation.isPending}
             data-testid="button-follow-detail"
           >
             <Heart className={`h-5 w-5 ${isFollowing ? 'fill-current text-red-500' : ''}`} />
@@ -72,13 +150,13 @@ export default function CampgroundDetail() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h1 className="font-display text-3xl font-bold mb-2">Pine Lake Campground</h1>
+            <h1 className="font-display text-3xl font-bold mb-2">{campground.name}</h1>
             <div className="flex items-center gap-2 text-muted-foreground">
               <MapPin className="h-4 w-4" />
-              <span>Yosemite National Park, CA</span>
+              <span>{campground.region}</span>
             </div>
           </div>
-          <StatusBadge status="available" verified={true} />
+          <StatusBadge status="unknown" verified={false} />
         </div>
 
         <Tabs defaultValue="overview" className="mb-6">
@@ -94,21 +172,21 @@ export default function CampgroundDetail() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground mb-4">
-                  Beautiful lakeside camping with stunning mountain views. Perfect for families and RVs. 
-                  Features include electric hookups, water access, and nearby hiking trails.
+                  {campground.description || "No description available."}
                 </p>
                 <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                  {campground.capacity && (
+                    <div>
+                      <span className="font-medium">Capacity:</span> {campground.capacity} sites
+                    </div>
+                  )}
+                  {campground.amenities && campground.amenities.length > 0 && (
+                    <div>
+                      <span className="font-medium">Amenities:</span> {campground.amenities.join(", ")}
+                    </div>
+                  )}
                   <div>
-                    <span className="font-medium">Capacity:</span> 50 sites
-                  </div>
-                  <div>
-                    <span className="font-medium">Amenities:</span> Restrooms, Showers
-                  </div>
-                  <div>
-                    <span className="font-medium">Type:</span> RV & Tent
-                  </div>
-                  <div>
-                    <span className="font-medium">Elevation:</span> 4,500 ft
+                    <span className="font-medium">Location:</span> {campground.lat.toFixed(4)}, {campground.lng.toFixed(4)}
                   </div>
                 </div>
               </CardContent>
@@ -121,7 +199,17 @@ export default function CampgroundDetail() {
                 <CardTitle>Recent Reports (Last 12h)</CardTitle>
               </CardHeader>
               <CardContent>
-                <ReportTimeline reports={reports} />
+                {loadingReports ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-16 w-full" />
+                    ))}
+                  </div>
+                ) : formattedReports.length > 0 ? (
+                  <ReportTimeline reports={formattedReports} />
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">No reports yet</p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -143,8 +231,9 @@ export default function CampgroundDetail() {
       <StatusReportModal
         open={reportModalOpen}
         onOpenChange={setReportModalOpen}
-        campgroundName="Pine Lake Campground"
-        onSubmit={(status) => console.log("Reported:", status)}
+        campgroundName={campground.name}
+        campgroundId={campground.id}
+        onSubmit={handleReportSubmit}
       />
     </div>
   );

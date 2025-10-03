@@ -1,33 +1,27 @@
 import { CampgroundCard } from "@/components/CampgroundCard";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Bell } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import type { Campground } from "@shared/schema";
 import lakesideImage from "@assets/generated_images/Lakeside_campground_landscape_a490e214.png";
 import mountainImage from "@assets/generated_images/Mountain_campground_scenic_view_5d210fdd.png";
 
+const defaultImages = [lakesideImage, mountainImage];
+
 export default function Following() {
-  const followedCampgrounds = [
-    {
-      id: "1",
-      name: "Pine Lake Campground",
-      location: "Yosemite, CA",
-      image: lakesideImage,
-      status: "available" as const,
-      verified: true,
-      lastUpdated: "2h ago",
-      reportCount: 5,
-      isFollowing: true,
-    },
-    {
-      id: "2",
-      name: "Mountain View RV Park",
-      location: "Rocky Mountains, CO",
-      image: mountainImage,
-      status: "full" as const,
-      verified: false,
-      lastUpdated: "4h ago",
-      reportCount: 12,
-      isFollowing: true,
-    },
-  ];
+  const { data: followedIds, isLoading: loadingFollows } = useQuery<string[]>({
+    queryKey: ["/api/follows"],
+  });
+
+  const { data: allCampgrounds, isLoading: loadingCampgrounds } = useQuery<Campground[]>({
+    queryKey: ["/api/campgrounds"],
+  });
+
+  const isLoading = loadingFollows || loadingCampgrounds;
+
+  const followedCampgrounds = allCampgrounds?.filter(
+    (campground) => followedIds?.includes(campground.id)
+  ) || [];
 
   return (
     <div className="min-h-screen p-6 pb-24 md:pb-6">
@@ -37,7 +31,17 @@ export default function Following() {
           <h1 className="font-display text-2xl font-bold">Following</h1>
         </div>
 
-        {followedCampgrounds.length === 0 ? (
+        {isLoading ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="space-y-3">
+                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            ))}
+          </div>
+        ) : followedCampgrounds.length === 0 ? (
           <div className="text-center py-12">
             <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
@@ -46,8 +50,19 @@ export default function Following() {
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {followedCampgrounds.map((campground) => (
-              <CampgroundCard key={campground.id} {...campground} />
+            {followedCampgrounds.map((campground, idx) => (
+              <CampgroundCard
+                key={campground.id}
+                id={campground.id}
+                name={campground.name}
+                location={campground.region}
+                image={campground.imageUrl || defaultImages[idx % defaultImages.length]}
+                status="unknown"
+                verified={false}
+                lastUpdated="Recently"
+                reportCount={0}
+                isFollowing={true}
+              />
             ))}
           </div>
         )}

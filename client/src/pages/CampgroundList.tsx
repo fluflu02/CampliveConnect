@@ -1,48 +1,41 @@
 import { CampgroundCard } from "@/components/CampgroundCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Search, SlidersHorizontal, Plus } from "lucide-react";
 import { StatusReportModal } from "@/components/StatusReportModal";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/lib/auth";
+import { useToast } from "@/hooks/use-toast";
+import type { Campground } from "@shared/schema";
 import lakesideImage from "@assets/generated_images/Lakeside_campground_landscape_a490e214.png";
 import mountainImage from "@assets/generated_images/Mountain_campground_scenic_view_5d210fdd.png";
+
+const defaultImages = [lakesideImage, mountainImage];
 
 export default function CampgroundList() {
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { token } = useAuth();
+  const { toast } = useToast();
 
-  const campgrounds = [
-    {
-      id: "1",
-      name: "Pine Lake Campground",
-      location: "Yosemite, CA",
-      image: lakesideImage,
-      status: "available" as const,
-      verified: true,
-      lastUpdated: "2h ago",
-      reportCount: 5,
-    },
-    {
-      id: "2",
-      name: "Mountain View RV Park",
-      location: "Rocky Mountains, CO",
-      image: mountainImage,
-      status: "full" as const,
-      verified: false,
-      lastUpdated: "4h ago",
-      reportCount: 12,
-    },
-    {
-      id: "3",
-      name: "Riverside Camping",
-      location: "Yellowstone, WY",
-      image: lakesideImage,
-      status: "unknown" as const,
-      verified: false,
-      lastUpdated: "10h ago",
-      reportCount: 3,
-    },
-  ];
+  const { data: campgrounds, isLoading } = useQuery<Campground[]>({
+    queryKey: ["/api/campgrounds", searchQuery ? { search: searchQuery } : null].filter(Boolean),
+    enabled: true,
+  });
+
+  const { data: follows = [] } = useQuery<string[]>({
+    queryKey: ["/api/follows"],
+    enabled: !!token,
+  });
+
+  const handleReportSubmit = (status: string) => {
+    toast({
+      title: "Status reported",
+      description: `Campground marked as ${status}`,
+    });
+  };
 
   return (
     <div className="min-h-screen p-6">
@@ -64,11 +57,38 @@ export default function CampgroundList() {
           </Button>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {campgrounds.map((campground) => (
-            <CampgroundCard key={campground.id} {...campground} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="space-y-3">
+                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            ))}
+          </div>
+        ) : campgrounds && campgrounds.length > 0 ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {campgrounds.map((campground, idx) => (
+              <CampgroundCard
+                key={campground.id}
+                id={campground.id}
+                name={campground.name}
+                location={campground.region}
+                image={campground.imageUrl || defaultImages[idx % defaultImages.length]}
+                status="unknown"
+                verified={false}
+                lastUpdated="Recently"
+                reportCount={0}
+                isFollowing={follows.includes(campground.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">No campgrounds found</p>
+          </div>
+        )}
       </div>
 
       <Button
@@ -85,7 +105,8 @@ export default function CampgroundList() {
         open={reportModalOpen}
         onOpenChange={setReportModalOpen}
         campgroundName="Selected Campground"
-        onSubmit={(status) => console.log("Reported:", status)}
+        campgroundId={campgrounds?.[0]?.id}
+        onSubmit={handleReportSubmit}
       />
     </div>
   );
