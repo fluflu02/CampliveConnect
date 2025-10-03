@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge } from "@/components/StatusBadge";
+import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
 import { ReportTimeline } from "@/components/ReportTimeline";
 import { StatusReportModal } from "@/components/StatusReportModal";
 import { MapPin, Heart, Share2, MessageSquare } from "lucide-react";
@@ -16,9 +16,21 @@ import type { Campground } from "@shared/schema";
 import lakesideImage from "@assets/generated_images/Lakeside_campground_landscape_a490e214.png";
 import { formatDistanceToNow } from "date-fns";
 
+type CampgroundWithAvailability = Campground & {
+  motorhomeAvailability?: number | null;
+  caravanAvailability?: number | null;
+  vwBusAvailability?: number | null;
+  largeTentAvailability?: number | null;
+  smallTentAvailability?: number | null;
+};
+
 interface ReportWithUser {
   id: string;
-  status: "available" | "full" | "unknown";
+  motorhomeAvailability?: number | null;
+  caravanAvailability?: number | null;
+  vwBusAvailability?: number | null;
+  largeTentAvailability?: number | null;
+  smallTentAvailability?: number | null;
   createdAt: string;
   userId: string;
   user?: {
@@ -33,7 +45,7 @@ export default function CampgroundDetail() {
   const { token, isAuthenticated } = useAuth();
   const { toast } = useToast();
 
-  const { data: campground, isLoading: loadingCampground } = useQuery<Campground>({
+  const { data: campground, isLoading: loadingCampground } = useQuery<CampgroundWithAvailability>({
     queryKey: ["/api/campgrounds", id],
     enabled: !!id,
   });
@@ -112,7 +124,11 @@ export default function CampgroundDetail() {
     id: report.id,
     userName: report.user?.name || "Anonymous",
     userInitials: (report.user?.name || "A").substring(0, 2).toUpperCase(),
-    status: report.status,
+    motorhomeAvailability: report.motorhomeAvailability,
+    caravanAvailability: report.caravanAvailability,
+    vwBusAvailability: report.vwBusAvailability,
+    largeTentAvailability: report.largeTentAvailability,
+    smallTentAvailability: report.smallTentAvailability,
     verified: false,
     timestamp: formatDistanceToNow(new Date(report.createdAt), { addSuffix: true }),
   })) || [];
@@ -148,15 +164,31 @@ export default function CampgroundDetail() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <h1 className="font-display text-3xl font-bold mb-2">{campground.name}</h1>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="h-4 w-4" />
-              <span>{campground.region}</span>
+        <div className="space-y-6 mb-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="font-display text-3xl font-bold mb-2">{campground.name}</h1>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <span>{campground.region}</span>
+              </div>
             </div>
           </div>
-          <StatusBadge status="unknown" verified={false} />
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Current Availability</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AvailabilityDisplay
+                motorhomeAvailability={campground.motorhomeAvailability}
+                caravanAvailability={campground.caravanAvailability}
+                vwBusAvailability={campground.vwBusAvailability}
+                largeTentAvailability={campground.largeTentAvailability}
+                smallTentAvailability={campground.smallTentAvailability}
+              />
+            </CardContent>
+          </Card>
         </div>
 
         <Tabs defaultValue="overview" className="mb-6">

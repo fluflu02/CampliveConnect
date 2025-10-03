@@ -8,12 +8,20 @@ import mountainImage from "@assets/generated_images/Mountain_campground_scenic_v
 
 const defaultImages = [lakesideImage, mountainImage];
 
+type CampgroundWithAvailability = Campground & {
+  motorhomeAvailability?: number | null;
+  caravanAvailability?: number | null;
+  vwBusAvailability?: number | null;
+  largeTentAvailability?: number | null;
+  smallTentAvailability?: number | null;
+};
+
 export default function Following() {
   const { data: followedIds, isLoading: loadingFollows } = useQuery<string[]>({
     queryKey: ["/api/follows"],
   });
 
-  const { data: allCampgrounds, isLoading: loadingCampgrounds } = useQuery<Campground[]>({
+  const { data: allCampgrounds, isLoading: loadingCampgrounds } = useQuery<CampgroundWithAvailability[]>({
     queryKey: ["/api/campgrounds"],
   });
 
@@ -57,8 +65,11 @@ export default function Following() {
                 name={campground.name}
                 location={campground.region}
                 image={campground.imageUrl || defaultImages[idx % defaultImages.length]}
-                status="unknown"
-                verified={false}
+                motorhomeAvailability={campground.motorhomeAvailability}
+                caravanAvailability={campground.caravanAvailability}
+                vwBusAvailability={campground.vwBusAvailability}
+                largeTentAvailability={campground.largeTentAvailability}
+                smallTentAvailability={campground.smallTentAvailability}
                 lastUpdated="Recently"
                 reportCount={0}
                 isFollowing={true}

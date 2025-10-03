@@ -14,13 +14,21 @@ import mountainImage from "@assets/generated_images/Mountain_campground_scenic_v
 
 const defaultImages = [lakesideImage, mountainImage];
 
+type CampgroundWithAvailability = Campground & {
+  motorhomeAvailability?: number | null;
+  caravanAvailability?: number | null;
+  vwBusAvailability?: number | null;
+  largeTentAvailability?: number | null;
+  smallTentAvailability?: number | null;
+};
+
 export default function CampgroundList() {
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { token } = useAuth();
   const { toast } = useToast();
 
-  const { data: campgrounds, isLoading } = useQuery<Campground[]>({
+  const { data: campgrounds, isLoading } = useQuery<CampgroundWithAvailability[]>({
     queryKey: ["/api/campgrounds", searchQuery ? { search: searchQuery } : null].filter(Boolean),
     enabled: true,
   });
@@ -30,10 +38,10 @@ export default function CampgroundList() {
     enabled: !!token,
   });
 
-  const handleReportSubmit = (status: string) => {
+  const handleReportSubmit = () => {
     toast({
       title: "Status reported",
-      description: `Campground marked as ${status}`,
+      description: "Availability updated successfully",
     });
   };
 
@@ -76,8 +84,11 @@ export default function CampgroundList() {
                 name={campground.name}
                 location={campground.region}
                 image={campground.imageUrl || defaultImages[idx % defaultImages.length]}
-                status="unknown"
-                verified={false}
+                motorhomeAvailability={campground.motorhomeAvailability}
+                caravanAvailability={campground.caravanAvailability}
+                vwBusAvailability={campground.vwBusAvailability}
+                largeTentAvailability={campground.largeTentAvailability}
+                smallTentAvailability={campground.smallTentAvailability}
                 lastUpdated="Recently"
                 reportCount={0}
                 isFollowing={follows.includes(campground.id)}

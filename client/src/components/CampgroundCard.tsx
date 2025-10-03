@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, MapPin, Clock } from "lucide-react";
-import { StatusBadge } from "./StatusBadge";
+import { AvailabilityDisplay } from "./AvailabilityDisplay";
 import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
@@ -9,15 +9,16 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 
-type StatusType = "available" | "full" | "unknown";
-
 interface CampgroundCardProps {
   id: string;
   name: string;
   location: string;
   image: string;
-  status: StatusType;
-  verified?: boolean;
+  motorhomeAvailability?: number | null;
+  caravanAvailability?: number | null;
+  vwBusAvailability?: number | null;
+  largeTentAvailability?: number | null;
+  smallTentAvailability?: number | null;
   lastUpdated: string;
   reportCount: number;
   isFollowing?: boolean;
@@ -29,8 +30,11 @@ export function CampgroundCard({
   name,
   location,
   image,
-  status,
-  verified = false,
+  motorhomeAvailability,
+  caravanAvailability,
+  vwBusAvailability,
+  largeTentAvailability,
+  smallTentAvailability,
   lastUpdated,
   reportCount,
   isFollowing = false,
@@ -92,13 +96,10 @@ export function CampgroundCard({
       <Card className="overflow-hidden hover-elevate" data-testid={`card-campground-${id}`}>
         <div className="relative aspect-video">
           <img src={image} alt={name} className="w-full h-full object-cover" />
-          <div className="absolute top-2 right-2">
-            <StatusBadge status={status} verified={verified} />
-          </div>
           <Button
             size="icon"
             variant="ghost"
-            className={`absolute top-2 left-2 ${following ? 'text-red-500' : 'text-white'} bg-black/30 backdrop-blur-sm hover:bg-black/50`}
+            className={`absolute top-2 right-2 ${following ? 'text-red-500' : 'text-white'} bg-black/30 backdrop-blur-sm hover:bg-black/50`}
             onClick={handleFollow}
             disabled={followMutation.isPending}
             data-testid={`button-follow-${id}`}
@@ -106,15 +107,27 @@ export function CampgroundCard({
             <Heart className={`h-4 w-4 ${following ? 'fill-current' : ''}`} />
           </Button>
         </div>
-        <div className="p-4">
-          <h3 className="font-semibold text-lg mb-1" data-testid={`text-campground-name-${id}`}>
-            {name}
-          </h3>
-          <div className="flex items-center text-sm text-muted-foreground gap-1 mb-2">
-            <MapPin className="h-3 w-3" />
-            <span>{location}</span>
+        <div className="p-4 space-y-3">
+          <div>
+            <h3 className="font-semibold text-lg mb-1" data-testid={`text-campground-name-${id}`}>
+              {name}
+            </h3>
+            <div className="flex items-center text-sm text-muted-foreground gap-1">
+              <MapPin className="h-3 w-3" />
+              <span>{location}</span>
+            </div>
           </div>
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+          
+          <AvailabilityDisplay
+            motorhomeAvailability={motorhomeAvailability}
+            caravanAvailability={caravanAvailability}
+            vwBusAvailability={vwBusAvailability}
+            largeTentAvailability={largeTentAvailability}
+            smallTentAvailability={smallTentAvailability}
+            compact={true}
+          />
+          
+          <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
               <span>{lastUpdated}</span>
