@@ -1,0 +1,146 @@
+🛠️ Developer Brief – CampLive (Replit Project)
+📖 Overview
+
+We are building CampLive, a progressive web app (PWA) for campers to check real-time campground availability.
+The app is community-driven (users report free/full spots) and also integrates verified updates from campground owners.
+Owners can send push notifications to their followers and access a Pro dashboard via subscription (Stripe).
+
+The project should be built fully on Replit (frontend + backend).
+
+🔑 Core Features
+Camper (Community Users)
+
+Map + List view of campgrounds.
+
+Submit availability reports (free / full / unknown).
+
+See latest community reports (last 12h).
+
+Follow campgrounds → receive push notifications.
+
+Campground Owners
+
+Claim their campground (manual approval by admin).
+
+Override status with expiry time (verified).
+
+Send push notifications to followers.
+
+Manage Pro subscription (via Stripe).
+
+Admin
+
+Approve claims.
+
+Moderate abuse reports.
+
+Manage operator subscriptions.
+
+⚙️ Tech Stack (on Replit)
+
+Frontend: React (Vite) → PWA (Mapbox or Leaflet for maps).
+
+Backend: FastAPI (Python) → REST API.
+
+Database: Supabase (Postgres + Auth + Storage).
+
+Push: Firebase Cloud Messaging (Web Push).
+
+Payments: Stripe Checkout + Billing (with Webhooks).
+
+📁 Project Structure
+/frontend   -> React PWA (map, list, UI)
+/backend    -> FastAPI (REST API, push, stripe webhooks)
+/infra      -> env files, configs, docs
+
+🔌 API Requirements
+
+Public Endpoints
+
+GET /api/campgrounds → list of campgrounds (map bounding box).
+
+GET /api/campgrounds/{id} → detail with latest status.
+
+Camper Endpoints
+
+POST /api/reports → submit status report (requires Auth).
+
+POST /api/follow → follow/unfollow campground.
+
+Owner Endpoints
+
+POST /api/override → set verified status (requires owner role).
+
+POST /api/push → send push notification to followers.
+
+Stripe Webhook
+
+POST /webhooks/stripe → update subscription status.
+
+🗂️ Database Schema (Supabase Tables)
+
+users: id, role (camper | owner | admin), name, created_at
+
+campgrounds: id, name, lat, lng, region, owner_user_id
+
+status_reports: id, campground_id, user_id, status, created_at
+
+operator_overrides: id, campground_id, status, expires_at
+
+follows: user_id, campground_id
+
+subscriptions: campground_id, plan, status, stripe_customer_id
+
+claims: id, campground_id, user_id, proof_url, state
+
+🔐 Authentication
+
+Supabase Auth (Email/Password, optional Google).
+
+JWT verification in FastAPI for protected endpoints.
+
+Role-checking for owner/admin features.
+
+💸 Monetization
+
+Pro Subscriptions: paid via Stripe (push + overrides).
+
+Ads/Sponsorships: outdoor brands (future).
+
+Booking commissions: later phase.
+
+🏁 Deliverables (MVP Scope)
+
+React PWA with:
+
+Map + List of campgrounds.
+
+Submit reports.
+
+View latest status.
+
+Follow campgrounds + receive push.
+
+FastAPI backend:
+
+Endpoints for reports, overrides, follows, claims.
+
+Stripe webhook for subscriptions.
+
+Push integration with Firebase FCM.
+
+Supabase setup:
+
+Database tables + Auth.
+
+Sample campground data (CSV import).
+
+Deployment on Replit with working demo URL.
+
+🎯 Timeline
+
+Week 1–2: Database setup, backend endpoints, auth.
+
+Week 3: Frontend (map + list + reports).
+
+Week 4: Push + Stripe integration, MVP ready.
