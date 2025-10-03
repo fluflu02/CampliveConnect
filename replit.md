@@ -3,14 +3,17 @@
 ## Overview
 SpotFree is a progressive web app that provides real-time campground availability through community reporting and owner verification. The platform supports multiple user roles (campers, owners, admins) with features including push notifications, Stripe subscriptions, and comprehensive moderation tools.
 
-**Current Status:** Core functionality complete - authentication, campground listing, community reporting, following, and admin claim management are fully operational.
+**Current Status:** Core functionality complete with Google Maps integration and PWA support. The app is centered on Engadin, Switzerland region with interactive map on the home screen.
 
 ## Recent Changes (October 3, 2025)
+- ✅ Added Google Maps integration with @vis.gl/react-google-maps library
+- ✅ Configured map centered on Engadin, Switzerland (lat: 46.6, lng: 9.9)
+- ✅ Moved interactive map to home screen as main interface
+- ✅ Implemented PWA configuration (manifest.json, service worker, app icons)
+- ✅ Updated branding to SpotFree with custom logo throughout app
 - ✅ Fixed query client to properly handle search parameters with URL query strings
 - ✅ Resolved status report cache invalidation to refresh list, detail, and timeline views
 - ✅ Synchronized follow state between frontend and backend with proper cache updates
-- ✅ Validated all API endpoints and authentication flow working correctly
-- ✅ Confirmed loading states and error handling across all user interactions
 
 ## Project Architecture
 
@@ -19,7 +22,9 @@ SpotFree is a progressive web app that provides real-time campground availabilit
 - **Backend:** Express.js with TypeScript
 - **Database:** Supabase/Neon PostgreSQL with Drizzle ORM
 - **Authentication:** JWT tokens with bcrypt password hashing
-- **Styling:** Tailwind CSS with custom forest green/teal outdoor theme
+- **Maps:** Google Maps JavaScript API via @vis.gl/react-google-maps
+- **PWA:** Service worker, manifest.json, app icons for installability
+- **Styling:** Tailwind CSS with custom teal outdoor theme
 - **UI Components:** Shadcn components with custom design system
 
 ### Database Schema
@@ -48,7 +53,7 @@ SpotFree is a progressive web app that provides real-time campground availabilit
 1. **Owner Features:** Complete owner dashboard with status override UI
 2. **Stripe Integration:** Checkout flow and webhook handling for Pro subscriptions
 3. **Push Notifications:** Firebase Cloud Messaging for follower alerts
-4. **Map Integration:** Visual campground discovery with Mapbox/Leaflet
+4. **Enhanced PWA:** Advanced offline caching with Workbox for full offline support
 
 ## API Endpoints
 - `POST /api/auth/register` - User registration
