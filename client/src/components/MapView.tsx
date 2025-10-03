@@ -48,7 +48,7 @@ export function MapView({ campgrounds = [], onMarkerClick }: MapViewProps) {
                 position={{ lat: campground.lat, lng: campground.lng }}
                 onClick={() => onMarkerClick?.(campground)}
               >
-                <div className="bg-teal-500 border-2 border-teal-700 rounded-full w-8 h-8 flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-transform">
+                <div className="bg-teal-500 border-2 border-teal-700 rounded-full w-8 h-8 flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-transform text-[15px]">
                   <MapPin className="h-5 w-5 text-white" />
                 </div>
               </AdvancedMarker>
