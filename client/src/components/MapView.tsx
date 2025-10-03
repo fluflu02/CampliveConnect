@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapPin, Search, Locate, Filter } from "lucide-react";
 import { useState } from "react";
-import { APIProvider, Map, AdvancedMarker, Pin } from "@vis.gl/react-google-maps";
+import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
 import type { Campground } from "@shared/schema";
 
 interface MapViewProps {
@@ -48,11 +48,9 @@ export function MapView({ campgrounds = [], onMarkerClick }: MapViewProps) {
                 position={{ lat: campground.lat, lng: campground.lng }}
                 onClick={() => onMarkerClick?.(campground)}
               >
-                <Pin
-                  background="#14b8a6"
-                  borderColor="#0f766e"
-                  glyphColor="#ffffff"
-                />
+                <div className="bg-teal-500 border-2 border-teal-700 rounded-full w-8 h-8 flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-transform">
+                  <MapPin className="h-5 w-5 text-white" />
+                </div>
               </AdvancedMarker>
             );
           })}
