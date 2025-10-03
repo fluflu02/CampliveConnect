@@ -3,18 +3,61 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapPin, Search, Locate, Filter } from "lucide-react";
 import { useState } from "react";
+import { APIProvider, Map, AdvancedMarker, Pin } from "@vis.gl/react-google-maps";
+import type { Campground } from "@shared/schema";
 
-export function MapView() {
+interface MapViewProps {
+  campgrounds?: Campground[];
+  onMarkerClick?: (campground: Campground) => void;
+}
+
+const ENGADIN_CENTER = { lat: 46.6, lng: 9.9 };
+
+export function MapView({ campgrounds = [], onMarkerClick }: MapViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-  return (
-    <div className="relative h-full w-full bg-muted/20">
-      <div className="absolute inset-0 flex items-center justify-center">
+  if (!apiKey) {
+    return (
+      <div className="relative h-full w-full bg-muted/20 flex items-center justify-center">
         <div className="text-center p-8">
           <MapPin className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">Map view (Mapbox/Leaflet integration)</p>
+          <p className="text-muted-foreground">Google Maps API key not configured</p>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="relative h-full w-full">
+      <APIProvider apiKey={apiKey}>
+        <Map
+          mapId="spotfree-map"
+          defaultCenter={ENGADIN_CENTER}
+          defaultZoom={11}
+          gestureHandling="greedy"
+          disableDefaultUI={false}
+          className="w-full h-full"
+        >
+          {campgrounds.map((campground) => {
+            if (!campground.lat || !campground.lng) return null;
+
+            return (
+              <AdvancedMarker
+                key={campground.id}
+                position={{ lat: campground.lat, lng: campground.lng }}
+                onClick={() => onMarkerClick?.(campground)}
+              >
+                <Pin
+                  background="#14b8a6"
+                  borderColor="#0f766e"
+                  glyphColor="#ffffff"
+                />
+              </AdvancedMarker>
+            );
+          })}
+        </Map>
+      </APIProvider>
 
       <div className="absolute top-4 left-1/2 -translate-x-1/2 w-full max-w-md px-4 z-10">
         <Card className="bg-background/95 backdrop-blur-md border-border/50">
