@@ -34,6 +34,7 @@ export interface IStorage {
   // Status report methods
   createStatusReport(report: InsertStatusReport & { userId: string }): Promise<StatusReport>;
   getRecentReports(campgroundId: string, hours?: number): Promise<Array<StatusReport & { user: User }>>;
+  getLatestAvailability(campgroundId: string): Promise<Omit<StatusReport, 'id' | 'userId' | 'campgroundId' | 'createdAt'> | null>;
   
   // Follow methods
   followCampground(follow: InsertFollow & { userId: string }): Promise<Follow>;
@@ -100,7 +101,11 @@ class DbStorage implements IStorage {
         id: statusReports.id,
         campgroundId: statusReports.campgroundId,
         userId: statusReports.userId,
-        status: statusReports.status,
+        motorhomeAvailability: statusReports.motorhomeAvailability,
+        caravanAvailability: statusReports.caravanAvailability,
+        vwBusAvailability: statusReports.vwBusAvailability,
+        largeTentAvailability: statusReports.largeTentAvailability,
+        smallTentAvailability: statusReports.smallTentAvailability,
         createdAt: statusReports.createdAt,
         user: users,
       })
@@ -115,6 +120,30 @@ class DbStorage implements IStorage {
       .orderBy(desc(statusReports.createdAt));
 
     return reports;
+  }
+
+  async getLatestAvailability(campgroundId: string): Promise<Omit<StatusReport, 'id' | 'userId' | 'campgroundId' | 'createdAt'> | null> {
+    const cutoffTime = new Date(Date.now() - 12 * 60 * 60 * 1000);
+    
+    const [latestReport] = await db
+      .select({
+        motorhomeAvailability: statusReports.motorhomeAvailability,
+        caravanAvailability: statusReports.caravanAvailability,
+        vwBusAvailability: statusReports.vwBusAvailability,
+        largeTentAvailability: statusReports.largeTentAvailability,
+        smallTentAvailability: statusReports.smallTentAvailability,
+      })
+      .from(statusReports)
+      .where(
+        and(
+          eq(statusReports.campgroundId, campgroundId),
+          gte(statusReports.createdAt, cutoffTime)
+        )
+      )
+      .orderBy(desc(statusReports.createdAt))
+      .limit(1);
+
+    return latestReport || null;
   }
 
   async followCampground(follow: InsertFollow & { userId: string }): Promise<Follow> {

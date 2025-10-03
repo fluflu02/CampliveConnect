@@ -80,7 +80,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? await storage.searchCampgrounds(search as string)
         : await storage.getCampgrounds();
 
-      res.json(campgrounds);
+      const campgroundsWithAvailability = await Promise.all(
+        campgrounds.map(async (campground) => {
+          const availability = await storage.getLatestAvailability(campground.id);
+          return {
+            ...campground,
+            ...availability,
+          };
+        })
+      );
+
+      res.json(campgroundsWithAvailability);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch campgrounds" });
     }
@@ -95,7 +105,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Campground not found" });
       }
 
-      res.json(campground);
+      const availability = await storage.getLatestAvailability(id);
+
+      res.json({
+        ...campground,
+        ...availability,
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch campground" });
     }
