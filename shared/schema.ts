@@ -24,6 +24,7 @@ export const campgrounds = pgTable("campgrounds", {
   lng: real("lng").notNull(),
   region: text("region").notNull(),
   description: text("description"),
+  website: text("website"),
   capacity: integer("capacity"),
   amenities: text("amenities").array(),
   imageUrl: text("image_url"),
@@ -94,6 +95,8 @@ export const insertUserSchema = createInsertSchema(users).omit({
 export const insertCampgroundSchema = createInsertSchema(campgrounds).omit({
   id: true,
   createdAt: true,
+}).extend({
+  website: z.string().url().optional().or(z.literal("")),
 });
 
 export const insertStatusReportSchema = createInsertSchema(statusReports).omit({

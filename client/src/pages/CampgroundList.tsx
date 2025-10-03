@@ -2,8 +2,9 @@ import { CampgroundCard } from "@/components/CampgroundCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, SlidersHorizontal, Plus } from "lucide-react";
+import { Search, SlidersHorizontal, Plus, MapPin } from "lucide-react";
 import { StatusReportModal } from "@/components/StatusReportModal";
+import { AddCampgroundModal } from "@/components/AddCampgroundModal";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
@@ -24,6 +25,7 @@ type CampgroundWithAvailability = Campground & {
 
 export default function CampgroundList() {
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [addCampgroundOpen, setAddCampgroundOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { token } = useAuth();
   const { toast } = useToast();
@@ -102,15 +104,32 @@ export default function CampgroundList() {
         )}
       </div>
 
-      <Button
-        size="lg"
-        className="fixed bottom-6 right-6 h-14 rounded-full shadow-xl"
-        onClick={() => setReportModalOpen(true)}
-        data-testid="button-quick-report"
-      >
-        <Plus className="h-5 w-5 mr-2" />
-        Report Status
-      </Button>
+      <div className="fixed bottom-6 right-6 flex flex-col gap-3">
+        <Button
+          size="lg"
+          className="h-14 rounded-full shadow-xl"
+          onClick={() => setAddCampgroundOpen(true)}
+          data-testid="button-add-campground-list"
+        >
+          <MapPin className="h-5 w-5 mr-2" />
+          Add Campground
+        </Button>
+
+        <Button
+          size="lg"
+          className="h-14 rounded-full shadow-xl"
+          onClick={() => setReportModalOpen(true)}
+          data-testid="button-quick-report"
+        >
+          <Plus className="h-5 w-5 mr-2" />
+          Report Status
+        </Button>
+      </div>
+
+      <AddCampgroundModal
+        open={addCampgroundOpen}
+        onOpenChange={setAddCampgroundOpen}
+      />
 
       <StatusReportModal
         open={reportModalOpen}

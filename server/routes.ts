@@ -116,6 +116,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/campgrounds", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const { insertCampgroundSchema } = await import("@shared/schema");
+      const data = insertCampgroundSchema.parse(req.body);
+      const campground = await storage.createCampground(data);
+      res.json(campground);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create campground" });
+    }
+  });
+
   // Status report routes
   app.post("/api/reports", requireAuth, async (req: AuthRequest, res) => {
     try {

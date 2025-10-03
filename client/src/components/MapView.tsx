@@ -1,10 +1,11 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, Search, Locate, Filter } from "lucide-react";
+import { MapPin, Search, Locate, Filter, Plus } from "lucide-react";
 import { useState } from "react";
 import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
 import type { Campground } from "@shared/schema";
+import { AddCampgroundModal } from "./AddCampgroundModal";
 
 interface MapViewProps {
   campgrounds?: Campground[];
@@ -15,6 +16,7 @@ const ENGADIN_CENTER = { lat: 46.6, lng: 9.9 };
 
 export function MapView({ campgrounds = [], onMarkerClick }: MapViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   if (!apiKey) {
@@ -85,6 +87,17 @@ export function MapView({ campgrounds = [], onMarkerClick }: MapViewProps) {
       >
         <Locate className="h-5 w-5" />
       </Button>
+
+      <Button
+        size="icon"
+        className="absolute bottom-4 right-4 h-12 w-12 rounded-full shadow-lg"
+        onClick={() => setShowAddModal(true)}
+        data-testid="button-add-campground"
+      >
+        <Plus className="h-5 w-5" />
+      </Button>
+
+      <AddCampgroundModal open={showAddModal} onOpenChange={setShowAddModal} />
     </div>
   );
 }
