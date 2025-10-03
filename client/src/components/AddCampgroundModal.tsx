@@ -46,7 +46,7 @@ export function AddCampgroundModal({ open, onOpenChange }: AddCampgroundModalPro
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertCampground) => {
-      return await apiRequest("/api/campgrounds", "POST", data);
+      return await apiRequest("POST", "/api/campgrounds", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/campgrounds"] });
