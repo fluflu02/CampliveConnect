@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
 import { ReportTimeline } from "@/components/ReportTimeline";
 import { StatusReportModal } from "@/components/StatusReportModal";
+import { LocationMap } from "@/components/LocationMap";
 import { MapPin, Heart, Share2, MessageSquare } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -197,7 +198,20 @@ export default function CampgroundDetail() {
             <TabsTrigger value="reports" data-testid="tab-reports">Reports</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="mt-6">
+          <TabsContent value="overview" className="mt-6 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Location</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <LocationMap 
+                  lat={campground.lat} 
+                  lng={campground.lng} 
+                  name={campground.name}
+                />
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>About This Campground</CardTitle>
@@ -218,7 +232,7 @@ export default function CampgroundDetail() {
                     </div>
                   )}
                   <div>
-                    <span className="font-medium">Location:</span> {campground.lat.toFixed(4)}, {campground.lng.toFixed(4)}
+                    <span className="font-medium">Coordinates:</span> {campground.lat.toFixed(4)}, {campground.lng.toFixed(4)}
                   </div>
                 </div>
               </CardContent>
