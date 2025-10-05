@@ -10,7 +10,7 @@ import { insertCampgroundSchema, type InsertCampground } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, MapPin, Navigation } from "lucide-react";
+import { Loader2, MapPin, Navigation, Image as ImageIcon, X } from "lucide-react";
 import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
 import { useState } from "react";
 
@@ -26,6 +26,7 @@ export function AddCampgroundModal({ open, onOpenChange }: AddCampgroundModalPro
   const [selectedPosition, setSelectedPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [addressInput, setAddressInput] = useState("");
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string>("");
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
   
   const form = useForm<InsertCampground>({
@@ -57,6 +58,7 @@ export function AddCampgroundModal({ open, onOpenChange }: AddCampgroundModalPro
       form.reset();
       setSelectedPosition(null);
       setAddressInput("");
+      setImagePreview("");
       onOpenChange(false);
     },
     onError: (error: Error) => {
@@ -126,6 +128,42 @@ export function AddCampgroundModal({ open, onOpenChange }: AddCampgroundModalPro
     } finally {
       setIsGeocoding(false);
     }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Image must be smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setImagePreview(base64);
+      form.setValue("imageUrl", base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setImagePreview("");
+    form.setValue("imageUrl", "");
   };
 
   const onSubmit = (data: InsertCampground) => {
@@ -331,6 +369,49 @@ export function AddCampgroundModal({ open, onOpenChange }: AddCampgroundModalPro
             {form.formState.errors.description && (
               <p className="text-sm text-destructive mt-1">{form.formState.errors.description.message}</p>
             )}
+          </div>
+
+          <div>
+            <Label htmlFor="cover-photo">Cover Photo</Label>
+            <div className="mt-2">
+              {imagePreview ? (
+                <div className="relative">
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="w-full h-48 object-cover rounded-lg border"
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="destructive"
+                    className="absolute top-2 right-2"
+                    onClick={removeImage}
+                    data-testid="button-remove-image"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                  <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+                  <Label 
+                    htmlFor="cover-photo-input" 
+                    className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    Click to upload cover photo (max 5MB)
+                  </Label>
+                  <Input
+                    id="cover-photo-input"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    data-testid="input-cover-photo"
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex gap-2 justify-end pt-4">

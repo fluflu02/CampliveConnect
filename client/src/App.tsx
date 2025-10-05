@@ -11,7 +11,6 @@ import MapPage from "@/pages/MapPage";
 import CampgroundList from "@/pages/CampgroundList";
 import CampgroundDetail from "@/pages/CampgroundDetail";
 import Following from "@/pages/Following";
-import OwnerDashboardPage from "@/pages/OwnerDashboardPage";
 import AdminPage from "@/pages/AdminPage";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/not-found";
@@ -50,9 +49,6 @@ function Router() {
       <Route path="/campground/:id" component={CampgroundDetail} />
       <Route path="/following">
         {() => <ProtectedRoute component={Following} />}
-      </Route>
-      <Route path="/owner-dashboard">
-        {() => <ProtectedRoute component={OwnerDashboardPage} requiredRole="owner" />}
       </Route>
       <Route path="/admin">
         {() => <ProtectedRoute component={AdminPage} requiredRole="admin" />}

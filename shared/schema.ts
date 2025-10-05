@@ -97,6 +97,7 @@ export const insertCampgroundSchema = createInsertSchema(campgrounds).omit({
   createdAt: true,
 }).extend({
   website: z.string().url().optional().or(z.literal("")),
+  imageUrl: z.string().optional().or(z.literal("")),
 });
 
 export const insertStatusReportSchema = createInsertSchema(statusReports).omit({

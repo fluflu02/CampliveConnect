@@ -6,7 +6,7 @@ import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
 import { ReportTimeline } from "@/components/ReportTimeline";
 import { StatusReportModal } from "@/components/StatusReportModal";
 import { LocationMap } from "@/components/LocationMap";
-import { MapPin, Heart, Share2, MessageSquare } from "lucide-react";
+import { MapPin, Heart, Share2, MessageSquare, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
@@ -229,6 +229,21 @@ export default function CampgroundDetail() {
                   {campground.amenities && campground.amenities.length > 0 && (
                     <div>
                       <span className="font-medium">Amenities:</span> {campground.amenities.join(", ")}
+                    </div>
+                  )}
+                  {campground.website && (
+                    <div>
+                      <span className="font-medium">Website:</span>{" "}
+                      <a 
+                        href={campground.website} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline inline-flex items-center gap-1"
+                        data-testid="link-campground-website"
+                      >
+                        Visit site
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
                     </div>
                   )}
                   <div>

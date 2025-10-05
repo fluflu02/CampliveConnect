@@ -7,16 +7,49 @@ import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
 import type { Campground } from "@shared/schema";
 import { AddCampgroundModal } from "./AddCampgroundModal";
 
+type CampgroundWithAvailability = Campground & {
+  motorhomeAvailability?: number | null;
+  caravanAvailability?: number | null;
+  vwBusAvailability?: number | null;
+  largeTentAvailability?: number | null;
+  smallTentAvailability?: number | null;
+};
+
 interface MapViewProps {
-  campgrounds?: Campground[];
-  onMarkerClick?: (campground: Campground) => void;
+  campgrounds?: CampgroundWithAvailability[];
+  onMarkerClick?: (campground: CampgroundWithAvailability) => void;
 }
+
+const getMarkerColor = (campground: CampgroundWithAvailability): { bg: string; border: string } => {
+  const availabilities = [
+    campground.motorhomeAvailability,
+    campground.caravanAvailability,
+    campground.vwBusAvailability,
+    campground.largeTentAvailability,
+    campground.smallTentAvailability,
+  ].filter((val) => val != null) as number[];
+
+  if (availabilities.length === 0) {
+    return { bg: "bg-teal-500", border: "border-teal-700" };
+  }
+
+  const avgAvailability = availabilities.reduce((sum, val) => sum + val, 0) / availabilities.length;
+
+  if (avgAvailability <= 10) {
+    return { bg: "bg-red-500", border: "border-red-700" };
+  } else if (avgAvailability <= 40) {
+    return { bg: "bg-orange-500", border: "border-orange-700" };
+  } else {
+    return { bg: "bg-teal-500", border: "border-teal-700" };
+  }
+};
 
 const ENGADIN_CENTER = { lat: 46.6, lng: 9.9 };
 
 export function MapView({ campgrounds = [], onMarkerClick }: MapViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [hoveredCampground, setHoveredCampground] = useState<CampgroundWithAvailability | null>(null);
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   if (!apiKey) {
@@ -43,6 +76,7 @@ export function MapView({ campgrounds = [], onMarkerClick }: MapViewProps) {
         >
           {campgrounds.map((campground) => {
             if (!campground.lat || !campground.lng) return null;
+            const { bg, border } = getMarkerColor(campground);
 
             return (
               <AdvancedMarker
@@ -50,12 +84,69 @@ export function MapView({ campgrounds = [], onMarkerClick }: MapViewProps) {
                 position={{ lat: campground.lat, lng: campground.lng }}
                 onClick={() => onMarkerClick?.(campground)}
               >
-                <div className="bg-teal-500 border-2 border-teal-700 rounded-full w-8 h-8 flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-transform text-[15px]">
+                <div 
+                  className={`${bg} border-2 ${border} rounded-full w-8 h-8 flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-transform text-[15px]`}
+                  onMouseEnter={() => setHoveredCampground(campground)}
+                  onMouseLeave={() => setHoveredCampground(null)}
+                  data-testid={`marker-campground-${campground.id}`}
+                >
                   <MapPin className="h-5 w-5 text-white" />
                 </div>
               </AdvancedMarker>
             );
           })}
+          
+          {hoveredCampground && (
+            <AdvancedMarker
+              key={`tooltip-${hoveredCampground.id}`}
+              position={{ lat: hoveredCampground.lat, lng: hoveredCampground.lng }}
+            >
+              <div className="absolute -top-32 left-1/2 -translate-x-1/2 pointer-events-none">
+                <Card className="bg-background/95 backdrop-blur-md border-border/50 p-3 min-w-[200px]">
+                  <h3 className="font-semibold mb-2 text-sm">{hoveredCampground.name}</h3>
+                  <div className="space-y-1 text-xs">
+                    {hoveredCampground.motorhomeAvailability != null && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Motorhome:</span>
+                        <span className="font-medium">{hoveredCampground.motorhomeAvailability}%</span>
+                      </div>
+                    )}
+                    {hoveredCampground.caravanAvailability != null && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Caravan:</span>
+                        <span className="font-medium">{hoveredCampground.caravanAvailability}%</span>
+                      </div>
+                    )}
+                    {hoveredCampground.vwBusAvailability != null && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">VW Bus:</span>
+                        <span className="font-medium">{hoveredCampground.vwBusAvailability}%</span>
+                      </div>
+                    )}
+                    {hoveredCampground.largeTentAvailability != null && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Large Tent:</span>
+                        <span className="font-medium">{hoveredCampground.largeTentAvailability}%</span>
+                      </div>
+                    )}
+                    {hoveredCampground.smallTentAvailability != null && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Small Tent:</span>
+                        <span className="font-medium">{hoveredCampground.smallTentAvailability}%</span>
+                      </div>
+                    )}
+                    {!hoveredCampground.motorhomeAvailability && 
+                     !hoveredCampground.caravanAvailability && 
+                     !hoveredCampground.vwBusAvailability && 
+                     !hoveredCampground.largeTentAvailability && 
+                     !hoveredCampground.smallTentAvailability && (
+                      <div className="text-muted-foreground">No availability data</div>
+                    )}
+                  </div>
+                </Card>
+              </div>
+            </AdvancedMarker>
+          )}
         </Map>
       </APIProvider>
 

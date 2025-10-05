@@ -35,11 +35,6 @@ export function Navbar() {
               Campgrounds
             </Button>
           </Link>
-          <Link href="/owner-dashboard">
-            <Button variant="ghost" data-testid="nav-link-owner">
-              For Owners
-            </Button>
-          </Link>
           <ThemeToggle />
           
           <DropdownMenu>
