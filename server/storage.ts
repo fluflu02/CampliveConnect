@@ -5,6 +5,8 @@ import {
   statusReports,
   follows,
   claims,
+  availabilityForecasts,
+  announcements,
   type User,
   type InsertUser,
   type Campground,
@@ -15,8 +17,12 @@ import {
   type InsertFollow,
   type Claim,
   type InsertClaim,
+  type AvailabilityForecast,
+  type InsertAvailabilityForecast,
+  type Announcement,
+  type InsertAnnouncement,
 } from "@shared/schema";
-import { eq, and, desc, gte, sql } from "drizzle-orm";
+import { eq, and, desc, gte, sql, lte } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -46,6 +52,20 @@ export interface IStorage {
   createClaim(claim: InsertClaim & { userId: string }): Promise<Claim>;
   getPendingClaims(): Promise<Array<Claim & { user: User; campground: Campground }>>;
   updateClaimState(id: string, state: "approved" | "rejected"): Promise<void>;
+  approveClaim(claimId: string, campgroundId: string, userId: string): Promise<void>;
+
+  // Forecast methods
+  createOrUpdateForecast(forecast: InsertAvailabilityForecast): Promise<AvailabilityForecast>;
+  getForecasts(campgroundId: string, days?: number): Promise<AvailabilityForecast[]>;
+  
+  // Announcement methods
+  createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement>;
+  getCampgroundAnnouncements(campgroundId: string, limit?: number): Promise<Announcement[]>;
+  
+  // Campground update methods
+  updateCampgroundOwnership(campgroundId: string, userId: string, verified: boolean): Promise<void>;
+  updateNotificationPreference(userId: string, enabled: boolean): Promise<void>;
+  getFollowersForCampground(campgroundId: string): Promise<User[]>;
 }
 
 class DbStorage implements IStorage {
@@ -196,6 +216,8 @@ class DbStorage implements IStorage {
         campgroundId: claims.campgroundId,
         userId: claims.userId,
         proofUrl: claims.proofUrl,
+        ownerEmail: claims.ownerEmail,
+        verificationCode: claims.verificationCode,
         state: claims.state,
         createdAt: claims.createdAt,
         user: users,
@@ -212,6 +234,112 @@ class DbStorage implements IStorage {
 
   async updateClaimState(id: string, state: "approved" | "rejected"): Promise<void> {
     await db.update(claims).set({ state }).where(eq(claims.id, id));
+  }
+
+  async approveClaim(claimId: string, campgroundId: string, userId: string): Promise<void> {
+    await db.update(claims).set({ state: "approved" }).where(eq(claims.id, claimId));
+    await db.update(campgrounds).set({ 
+      ownerUserId: userId,
+      isVerifiedOwner: true 
+    }).where(eq(campgrounds.id, campgroundId));
+    await db.update(users).set({ role: "owner" }).where(eq(users.id, userId));
+  }
+
+  async createOrUpdateForecast(forecast: InsertAvailabilityForecast): Promise<AvailabilityForecast> {
+    const [existing] = await db
+      .select()
+      .from(availabilityForecasts)
+      .where(
+        and(
+          eq(availabilityForecasts.campgroundId, forecast.campgroundId),
+          eq(availabilityForecasts.date, forecast.date)
+        )
+      )
+      .limit(1);
+
+    if (existing) {
+      const [updated] = await db
+        .update(availabilityForecasts)
+        .set({ 
+          ...forecast,
+          updatedAt: new Date(),
+        })
+        .where(eq(availabilityForecasts.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      const [newForecast] = await db
+        .insert(availabilityForecasts)
+        .values(forecast)
+        .returning();
+      return newForecast;
+    }
+  }
+
+  async getForecasts(campgroundId: string, days: number = 7): Promise<AvailabilityForecast[]> {
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + days);
+    
+    return db
+      .select()
+      .from(availabilityForecasts)
+      .where(
+        and(
+          eq(availabilityForecasts.campgroundId, campgroundId),
+          lte(availabilityForecasts.date, endDate)
+        )
+      )
+      .orderBy(availabilityForecasts.date);
+  }
+
+  async createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement> {
+    const [newAnnouncement] = await db
+      .insert(announcements)
+      .values(announcement)
+      .returning();
+    return newAnnouncement;
+  }
+
+  async getCampgroundAnnouncements(campgroundId: string, limit: number = 10): Promise<Announcement[]> {
+    return db
+      .select()
+      .from(announcements)
+      .where(eq(announcements.campgroundId, campgroundId))
+      .orderBy(desc(announcements.createdAt))
+      .limit(limit);
+  }
+
+  async updateCampgroundOwnership(campgroundId: string, userId: string, verified: boolean): Promise<void> {
+    await db
+      .update(campgrounds)
+      .set({ 
+        ownerUserId: userId,
+        isVerifiedOwner: verified 
+      })
+      .where(eq(campgrounds.id, campgroundId));
+  }
+
+  async updateNotificationPreference(userId: string, enabled: boolean): Promise<void> {
+    await db
+      .update(users)
+      .set({ notificationsEnabled: enabled })
+      .where(eq(users.id, userId));
+  }
+
+  async getFollowersForCampground(campgroundId: string): Promise<User[]> {
+    const followers = await db
+      .select({ user: users })
+      .from(follows)
+      .innerJoin(users, eq(follows.userId, users.id))
+      .where(
+        and(
+          eq(follows.campgroundId, campgroundId),
+          eq(follows.notifyOnAvailability, true),
+          eq(users.notificationsEnabled, true)
+        )
+      );
+    
+    return followers.map(f => f.user);
   }
 }
 

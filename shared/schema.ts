@@ -14,6 +14,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   name: text("name").notNull(),
   role: userRoleEnum("role").notNull().default("camper"),
+  notificationsEnabled: boolean("notifications_enabled").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -29,6 +30,7 @@ export const campgrounds = pgTable("campgrounds", {
   amenities: text("amenities").array(),
   imageUrl: text("image_url"),
   ownerUserId: varchar("owner_user_id").references(() => users.id),
+  isVerifiedOwner: boolean("is_verified_owner").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -60,6 +62,7 @@ export const follows = pgTable("follows", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   campgroundId: varchar("campground_id").notNull().references(() => campgrounds.id, { onDelete: "cascade" }),
+  notifyOnAvailability: boolean("notify_on_availability").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -80,7 +83,31 @@ export const claims = pgTable("claims", {
   campgroundId: varchar("campground_id").notNull().references(() => campgrounds.id, { onDelete: "cascade" }),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   proofUrl: text("proof_url"),
+  ownerEmail: text("owner_email"),
+  verificationCode: text("verification_code"),
   state: claimStateEnum("state").notNull().default("pending"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const availabilityForecasts = pgTable("availability_forecasts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  campgroundId: varchar("campground_id").notNull().references(() => campgrounds.id, { onDelete: "cascade" }),
+  date: timestamp("date").notNull(),
+  motorhomeAvailability: integer("motorhome_availability"),
+  caravanAvailability: integer("caravan_availability"),
+  vwBusAvailability: integer("vw_bus_availability"),
+  largeTentAvailability: integer("large_tent_availability"),
+  smallTentAvailability: integer("small_tent_availability"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const announcements = pgTable("announcements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  campgroundId: varchar("campground_id").notNull().references(() => campgrounds.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  sendNotification: boolean("send_notification").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -142,6 +169,23 @@ export const insertClaimSchema = createInsertSchema(claims).omit({
   state: z.enum(["pending", "approved", "rejected"]).optional(),
 });
 
+export const insertAvailabilityForecastSchema = createInsertSchema(availabilityForecasts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  motorhomeAvailability: z.number().min(0).max(100).optional(),
+  caravanAvailability: z.number().min(0).max(100).optional(),
+  vwBusAvailability: z.number().min(0).max(100).optional(),
+  largeTentAvailability: z.number().min(0).max(100).optional(),
+  smallTentAvailability: z.number().min(0).max(100).optional(),
+});
+
+export const insertAnnouncementSchema = createInsertSchema(announcements).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
@@ -162,3 +206,9 @@ export type Subscription = typeof subscriptions.$inferSelect;
 
 export type InsertClaim = z.infer<typeof insertClaimSchema>;
 export type Claim = typeof claims.$inferSelect;
+
+export type InsertAvailabilityForecast = z.infer<typeof insertAvailabilityForecastSchema>;
+export type AvailabilityForecast = typeof availabilityForecasts.$inferSelect;
+
+export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
+export type Announcement = typeof announcements.$inferSelect;
