@@ -1,0 +1,60 @@
+🧭 New Features – Owner Dashboard (for Campground Operators)
+1. Push notifications to followers
+
+Campground owners should be able to send push or browser notifications to all users who follow their campground.
+Examples:
+
+“New availability update”
+
+“Special event this weekend”
+
+2. Availability forecast (next 7 nights)
+
+Owners should be able to set and update the expected availability for the next 7 nights, per category (e.g., tents, campers, bungalows).
+Example:
+
+Today: 30% available
+
+Tomorrow: 60%
+
+Day after tomorrow: 80%
+
+3. 0% availability
+
+The system must allow setting 0% availability, indicating that the campground (or a specific category) is fully booked.
+
+4. Claim campground listing
+
+Owners should be able to claim an existing campground that was uploaded by a user.
+
+Process:
+
+A button “Claim this campground” appears on each campground detail page.
+
+The owner provides their official campground email or website, and receives a verification code to confirm ownership.
+
+After successful verification, the campground is linked to the owner’s account.
+
+On the map and detail page, display a badge: “✅ Verified Owner”.
+
+5. Notification when a favorite campground becomes available
+
+Users should be able to opt in to receive notifications when one of their favorite campgrounds (those they follow) reports new availability.
+
+Users can enable or disable this feature in their profile.
+
+When the owner updates availability (via the 7-night forecast), a push or email notification is automatically sent to interested users.
+Example notification:
+
+“Good news! Your favorite campground Camping Bernina has new availability.”
+
+6. Special announcements / events
+
+Owners should be able to publish special announcements, promotions, or events directly on their campground page.
+Examples:
+
+“Summer Festival on July 14th”
+
+“Last available spots for the weekend!”
+These announcements appear on the campground detail page, visible to all visitors.
+Optionally, a push notification can also be sent to followers.
