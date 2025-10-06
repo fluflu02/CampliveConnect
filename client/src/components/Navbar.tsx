@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
-import { User, LogOut, LogIn } from "lucide-react";
+import { User, LogOut, LogIn, Home, Shield } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import {
@@ -54,6 +54,19 @@ export function Navbar() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  {user?.role === "owner" && (
+                    <DropdownMenuItem onClick={() => setLocation("/owner/dashboard")} data-testid="button-owner-dashboard">
+                      <Home className="mr-2 h-4 w-4" />
+                      <span>Owner Dashboard</span>
+                    </DropdownMenuItem>
+                  )}
+                  {user?.role === "admin" && (
+                    <DropdownMenuItem onClick={() => setLocation("/admin")} data-testid="button-admin-panel">
+                      <Shield className="mr-2 h-4 w-4" />
+                      <span>Admin Panel</span>
+                    </DropdownMenuItem>
+                  )}
+                  {(user?.role === "owner" || user?.role === "admin") && <DropdownMenuSeparator />}
                   <DropdownMenuItem onClick={handleLogout} data-testid="button-logout">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>

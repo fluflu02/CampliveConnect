@@ -12,6 +12,7 @@ import CampgroundList from "@/pages/CampgroundList";
 import CampgroundDetail from "@/pages/CampgroundDetail";
 import Following from "@/pages/Following";
 import AdminPage from "@/pages/AdminPage";
+import OwnerDashboard from "@/pages/OwnerDashboard";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/not-found";
 import { useEffect } from "react";
@@ -52,6 +53,9 @@ function Router() {
       </Route>
       <Route path="/admin">
         {() => <ProtectedRoute component={AdminPage} requiredRole="admin" />}
+      </Route>
+      <Route path="/owner/dashboard">
+        {() => <ProtectedRoute component={OwnerDashboard} requiredRole="owner" />}
       </Route>
       <Route component={NotFound} />
     </Switch>
