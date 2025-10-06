@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { hashPassword, verifyPassword, generateToken, requireAuth, requireRole, type AuthRequest } from "./auth";
-import { insertUserSchema, insertStatusReportSchema, insertFollowSchema, insertClaimSchema } from "@shared/schema";
+import { insertUserSchema, insertStatusReportSchema, insertFollowSchema, insertClaimSchema, insertAvailabilityForecastSchema, insertAnnouncementSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -254,6 +254,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Claim updated successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to update claim" });
+    }
+  });
+
+  // Forecast routes (owner only)
+  app.post("/api/forecasts", requireAuth, requireRole("owner"), async (req: AuthRequest, res) => {
+    try {
+      const data = insertAvailabilityForecastSchema.parse(req.body);
+      const forecast = await storage.createOrUpdateForecast(data);
+      res.json(forecast);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create forecast" });
+    }
+  });
+
+  app.get("/api/forecasts/:campgroundId", async (req, res) => {
+    try {
+      const { campgroundId } = req.params;
+      const days = req.query.days ? parseInt(req.query.days as string, 10) : 7;
+      const forecasts = await storage.getForecasts(campgroundId, days);
+      res.json(forecasts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch forecasts" });
+    }
+  });
+
+  // Announcement routes
+  app.post("/api/announcements", requireAuth, requireRole("owner"), async (req: AuthRequest, res) => {
+    try {
+      const data = insertAnnouncementSchema.parse(req.body);
+      const announcement = await storage.createAnnouncement(data);
+      
+      if (data.sendNotification) {
+        const followers = await storage.getFollowersForCampground(data.campgroundId);
+        console.log(`Would notify ${followers.length} followers about announcement: ${data.title}`);
+      }
+      
+      res.json(announcement);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create announcement" });
+    }
+  });
+
+  app.get("/api/announcements/:campgroundId", async (req, res) => {
+    try {
+      const { campgroundId } = req.params;
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+      const announcements = await storage.getCampgroundAnnouncements(campgroundId, limit);
+      res.json(announcements);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch announcements" });
+    }
+  });
+
+  // Notification preference routes
+  app.patch("/api/user/notifications", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const { enabled } = req.body;
+      if (typeof enabled !== "boolean") {
+        return res.status(400).json({ message: "Invalid input" });
+      }
+      await storage.updateNotificationPreference(req.user!.id, enabled);
+      res.json({ message: "Notification preference updated" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update notification preference" });
+    }
+  });
+
+  // Owner campgrounds route
+  app.get("/api/owner/campgrounds", requireAuth, requireRole("owner"), async (req: AuthRequest, res) => {
+    try {
+      const allCampgrounds = await storage.getCampgrounds();
+      const ownedCampgrounds = allCampgrounds.filter(c => c.ownerUserId === req.user!.id);
+      
+      const campgroundsWithDetails = await Promise.all(
+        ownedCampgrounds.map(async (campground) => {
+          const availability = await storage.getLatestAvailability(campground.id);
+          const followers = await storage.getFollowersForCampground(campground.id);
+          return {
+            ...campground,
+            ...availability,
+            followerCount: followers.length,
+          };
+        })
+      );
+      
+      res.json(campgroundsWithDetails);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch owned campgrounds" });
     }
   });
 
