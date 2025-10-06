@@ -6,7 +6,9 @@ import { AvailabilityDisplay } from "@/components/AvailabilityDisplay";
 import { ReportTimeline } from "@/components/ReportTimeline";
 import { StatusReportModal } from "@/components/StatusReportModal";
 import { LocationMap } from "@/components/LocationMap";
-import { MapPin, Heart, Share2, MessageSquare, ExternalLink } from "lucide-react";
+import { MapPin, Heart, Share2, MessageSquare, ExternalLink, CheckCircle2, Award } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ClaimCampgroundModal } from "@/components/ClaimCampgroundModal";
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
@@ -43,7 +45,8 @@ export default function CampgroundDetail() {
   const { id } = useParams<{ id: string }>();
   const [isFollowing, setIsFollowing] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
-  const { token, isAuthenticated } = useAuth();
+  const [claimModalOpen, setClaimModalOpen] = useState(false);
+  const { token, isAuthenticated, user } = useAuth();
   const { toast } = useToast();
 
   const { data: campground, isLoading: loadingCampground } = useQuery<CampgroundWithAvailability>({
@@ -166,14 +169,33 @@ export default function CampgroundDetail() {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="space-y-6 mb-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="font-display text-3xl font-bold mb-2">{campground.name}</h1>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-2 flex-wrap">
+                <h1 className="font-display text-3xl font-bold" data-testid="text-campground-name">{campground.name}</h1>
+                {campground.isVerifiedOwner && (
+                  <Badge variant="default" className="gap-1" data-testid="badge-verified-owner">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Verified Owner
+                  </Badge>
+                )}
+              </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <MapPin className="h-4 w-4" />
                 <span>{campground.region}</span>
               </div>
             </div>
+            {isAuthenticated && user?.role === "camper" && !campground.ownerUserId && (
+              <Button 
+                variant="outline" 
+                className="gap-2"
+                onClick={() => setClaimModalOpen(true)}
+                data-testid="button-claim-campground"
+              >
+                <Award className="h-4 w-4" />
+                Claim as Owner
+              </Button>
+            )}
           </div>
           
           <Card>
@@ -295,6 +317,13 @@ export default function CampgroundDetail() {
         campgroundName={campground.name}
         campgroundId={campground.id}
         onSubmit={handleReportSubmit}
+      />
+      
+      <ClaimCampgroundModal
+        open={claimModalOpen}
+        onOpenChange={setClaimModalOpen}
+        campgroundId={campground.id}
+        campgroundName={campground.name}
       />
     </div>
   );

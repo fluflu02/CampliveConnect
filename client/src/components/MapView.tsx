@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, Search, Locate, Filter, Plus } from "lucide-react";
+import { MapPin, Search, Locate, Filter, Plus, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
 import type { Campground } from "@shared/schema";
@@ -84,13 +84,20 @@ export function MapView({ campgrounds = [], onMarkerClick }: MapViewProps) {
                 position={{ lat: campground.lat, lng: campground.lng }}
                 onClick={() => onMarkerClick?.(campground)}
               >
-                <div 
-                  className={`${bg} border-2 ${border} rounded-full w-8 h-8 flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-transform text-[15px]`}
-                  onMouseEnter={() => setHoveredCampground(campground)}
-                  onMouseLeave={() => setHoveredCampground(null)}
-                  data-testid={`marker-campground-${campground.id}`}
-                >
-                  <MapPin className="h-5 w-5 text-white" />
+                <div className="relative">
+                  <div 
+                    className={`${bg} border-2 ${border} rounded-full w-8 h-8 flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-transform text-[15px]`}
+                    onMouseEnter={() => setHoveredCampground(campground)}
+                    onMouseLeave={() => setHoveredCampground(null)}
+                    data-testid={`marker-campground-${campground.id}`}
+                  >
+                    <MapPin className="h-5 w-5 text-white" />
+                  </div>
+                  {campground.isVerifiedOwner && (
+                    <div className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 shadow-md">
+                      <CheckCircle2 className="h-3 w-3 text-teal-600" data-testid={`badge-verified-marker-${campground.id}`} />
+                    </div>
+                  )}
                 </div>
               </AdvancedMarker>
             );
@@ -103,7 +110,12 @@ export function MapView({ campgrounds = [], onMarkerClick }: MapViewProps) {
             >
               <div className="absolute -top-32 left-1/2 -translate-x-1/2 pointer-events-none">
                 <Card className="bg-background/95 backdrop-blur-md border-border/50 p-3 min-w-[200px]">
-                  <h3 className="font-semibold mb-2 text-sm">{hoveredCampground.name}</h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-semibold text-sm">{hoveredCampground.name}</h3>
+                    {hoveredCampground.isVerifiedOwner && (
+                      <CheckCircle2 className="h-3 w-3 text-teal-600" />
+                    )}
+                  </div>
                   <div className="space-y-1 text-xs">
                     {hoveredCampground.motorhomeAvailability != null && (
                       <div className="flex justify-between">
