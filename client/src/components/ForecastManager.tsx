@@ -36,12 +36,7 @@ export function ForecastManager({ campgroundId }: ForecastManagerProps) {
   });
 
   const { data: existingForecasts } = useQuery({
-    queryKey: ["/api/forecasts", campgroundId],
-    queryFn: async () => {
-      const response = await fetch(`/api/forecasts/${campgroundId}?days=7`);
-      if (!response.ok) throw new Error("Failed to fetch forecasts");
-      return response.json();
-    },
+    queryKey: ["/api/forecasts", campgroundId, { days: 7 }],
   });
 
   const saveMutation = useMutation({

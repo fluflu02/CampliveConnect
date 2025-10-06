@@ -23,12 +23,7 @@ export function AnnouncementCreator({ campgroundId, followerCount }: Announcemen
   const [sendNotification, setSendNotification] = useState(false);
 
   const { data: announcements } = useQuery({
-    queryKey: ["/api/announcements", campgroundId],
-    queryFn: async () => {
-      const response = await fetch(`/api/announcements/${campgroundId}?limit=5`);
-      if (!response.ok) throw new Error("Failed to fetch announcements");
-      return response.json();
-    },
+    queryKey: ["/api/announcements", campgroundId, { limit: 5 }],
   });
 
   const createMutation = useMutation({
