@@ -208,12 +208,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/claims", requireAuth, async (req: AuthRequest, res) => {
     try {
       const data = insertClaimSchema.parse(req.body);
+      
+      // Create the claim (it will be auto-approved)
       const claim = await storage.createClaim({
         ...data,
         userId: req.user!.id,
       });
 
-      res.json(claim);
+      // Immediately upgrade user to owner role
+      await storage.updateUserRole(req.user!.id.toString(), "owner");
+      
+      // Immediately verify the campground and link it to the owner
+      await storage.updateCampgroundOwnership(data.campgroundId, req.user!.id.toString(), true);
+
+      // Generate new token with updated role
+      const token = generateToken({
+        id: req.user!.id,
+        email: req.user!.email,
+        name: req.user!.name,
+        role: "owner",
+      });
+
+      res.json({ claim, token });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid input", errors: error.errors });

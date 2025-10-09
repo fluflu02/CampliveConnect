@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Award, Mail } from "lucide-react";
+import { Award, Mail, Zap } from "lucide-react";
 
 interface ClaimCampgroundModalProps {
   open: boolean;
@@ -35,26 +35,44 @@ export function ClaimCampgroundModal({
 
   const claimMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("POST", "/api/claims", {
+      const response = await apiRequest("POST", "/api/claims", {
         campgroundId,
         ownerEmail,
         proofUrl: proofUrl || undefined,
       });
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Update the auth token with the new owner role
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token);
+        // Decode and update user data
+        const payload = JSON.parse(atob(data.token.split('.')[1]));
+        if (payload.user) {
+          localStorage.setItem("auth_user", JSON.stringify(payload.user));
+        }
+      }
+      
       toast({
-        title: "Claim submitted!",
-        description: "Your ownership claim has been submitted for admin review. You'll be notified once it's approved.",
+        title: "Campground claimed successfully!",
+        description: "You now have full owner access and can manage this campground immediately.",
       });
       setOwnerEmail("");
       setProofUrl("");
       onOpenChange(false);
+      
+      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/campgrounds", campgroundId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/owner/campgrounds"] });
+      
+      // Reload the page to show updated UI with owner role
+      setTimeout(() => window.location.reload(), 500);
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to submit claim. Please try again.",
+        description: "Failed to claim campground. Please try again.",
         variant: "destructive",
       });
     },
@@ -82,7 +100,13 @@ export function ClaimCampgroundModal({
             Claim {campgroundName}
           </DialogTitle>
           <DialogDescription data-testid="text-claim-modal-description">
-            Submit a claim to become the verified owner of this campground. An admin will review your request.
+            <div className="space-y-2">
+              <p>Claim this campground and get instant owner access!</p>
+              <div className="flex items-center gap-2 text-sm text-foreground bg-teal-50 dark:bg-teal-950 p-2 rounded-md">
+                <Zap className="h-4 w-4 text-teal-600" />
+                <span>You'll immediately gain access to all owner features after claiming.</span>
+              </div>
+            </div>
           </DialogDescription>
         </DialogHeader>
         
