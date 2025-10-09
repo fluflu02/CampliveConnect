@@ -174,6 +174,7 @@ export const insertAvailabilityForecastSchema = createInsertSchema(availabilityF
   createdAt: true,
   updatedAt: true,
 }).extend({
+  date: z.coerce.date({ invalid_type_error: "Invalid date format" }),
   motorhomeAvailability: z.number().min(0).max(100).optional(),
   caravanAvailability: z.number().min(0).max(100).optional(),
   vwBusAvailability: z.number().min(0).max(100).optional(),
