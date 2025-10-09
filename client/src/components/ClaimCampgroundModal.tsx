@@ -43,14 +43,14 @@ export function ClaimCampgroundModal({
       return response.json();
     },
     onSuccess: (data) => {
-      // Update the auth token with the new owner role
+      // Update the auth token and user with the new owner role
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
-        // Decode and update user data
-        const payload = JSON.parse(atob(data.token.split('.')[1]));
-        if (payload.user) {
-          localStorage.setItem("auth_user", JSON.stringify(payload.user));
-        }
+      }
+      
+      // Update user data with owner role
+      if (data.user) {
+        localStorage.setItem("auth_user", JSON.stringify(data.user));
       }
       
       toast({

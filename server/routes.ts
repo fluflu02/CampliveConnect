@@ -209,10 +209,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const data = insertClaimSchema.parse(req.body);
       
-      // Create the claim (it will be auto-approved)
+      // Create the claim with approved status
       const claim = await storage.createClaim({
         ...data,
         userId: req.user!.id,
+        state: "approved", // Instantly approve the claim
       });
 
       // Immediately upgrade user to owner role
@@ -221,15 +222,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Immediately verify the campground and link it to the owner
       await storage.updateCampgroundOwnership(data.campgroundId, req.user!.id.toString(), true);
 
-      // Generate new token with updated role
-      const token = generateToken({
+      // Create updated user object with new role
+      const updatedUser = {
         id: req.user!.id,
         email: req.user!.email,
         name: req.user!.name,
-        role: "owner",
-      });
+        role: "owner" as const,
+      };
 
-      res.json({ claim, token });
+      // Generate new token with updated role
+      const token = generateToken(updatedUser);
+
+      res.json({ claim, token, user: updatedUser });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid input", errors: error.errors });
@@ -241,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin routes
   app.get("/api/admin/claims", requireAuth, requireRole("admin"), async (req: AuthRequest, res) => {
     try {
-      const claims = await storage.getPendingClaims();
+      const claims = await storage.getAllClaims();
       res.json(claims);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch claims" });

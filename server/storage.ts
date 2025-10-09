@@ -51,6 +51,7 @@ export interface IStorage {
   // Claim methods
   createClaim(claim: InsertClaim & { userId: string }): Promise<Claim>;
   getPendingClaims(): Promise<Array<Claim & { user: User; campground: Campground }>>;
+  getAllClaims(): Promise<Array<Claim & { user: User; campground: Campground }>>;
   updateClaimState(id: string, state: "approved" | "rejected"): Promise<void>;
   approveClaim(claimId: string, campgroundId: string, userId: string): Promise<void>;
 
@@ -230,6 +231,28 @@ class DbStorage implements IStorage {
       .orderBy(desc(claims.createdAt));
 
     return pendingClaims;
+  }
+
+  async getAllClaims(): Promise<Array<Claim & { user: User; campground: Campground }>> {
+    const allClaims = await db
+      .select({
+        id: claims.id,
+        campgroundId: claims.campgroundId,
+        userId: claims.userId,
+        proofUrl: claims.proofUrl,
+        ownerEmail: claims.ownerEmail,
+        verificationCode: claims.verificationCode,
+        state: claims.state,
+        createdAt: claims.createdAt,
+        user: users,
+        campground: campgrounds,
+      })
+      .from(claims)
+      .innerJoin(users, eq(claims.userId, users.id))
+      .innerJoin(campgrounds, eq(claims.campgroundId, campgrounds.id))
+      .orderBy(desc(claims.createdAt));
+
+    return allClaims;
   }
 
   async updateClaimState(id: string, state: "approved" | "rejected"): Promise<void> {
