@@ -58,6 +58,7 @@ export interface IStorage {
   // Forecast methods
   createOrUpdateForecast(forecast: InsertAvailabilityForecast): Promise<AvailabilityForecast>;
   getForecasts(campgroundId: string, days?: number): Promise<AvailabilityForecast[]>;
+  getForecastsByDate(date: string): Promise<AvailabilityForecast[]>;
   
   // Announcement methods
   createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement>;
@@ -313,6 +314,22 @@ class DbStorage implements IStorage {
         )
       )
       .orderBy(availabilityForecasts.date);
+  }
+
+  async getForecastsByDate(date: string): Promise<AvailabilityForecast[]> {
+    const targetDate = new Date(date);
+    const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
+    
+    return db
+      .select()
+      .from(availabilityForecasts)
+      .where(
+        and(
+          gte(availabilityForecasts.date, startOfDay),
+          lte(availabilityForecasts.date, endOfDay)
+        )
+      );
   }
 
   async createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement> {

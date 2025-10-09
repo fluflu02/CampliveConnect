@@ -302,6 +302,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/forecasts/date/:date", async (req, res) => {
+    try {
+      const { date } = req.params;
+      const forecasts = await storage.getForecastsByDate(date);
+      res.json(forecasts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch forecasts by date" });
+    }
+  });
+
   // Announcement routes
   app.post("/api/announcements", requireAuth, requireRole("owner"), async (req: AuthRequest, res) => {
     try {
