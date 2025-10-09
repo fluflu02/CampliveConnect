@@ -5,17 +5,20 @@ SpotFree is a progressive web app that provides real-time campground availabilit
 
 **Current Status:** Core functionality complete with Google Maps integration and PWA support. The app is centered on Engadin, Switzerland region with interactive map on the home screen.
 
-## Recent Changes (October 6, 2025)
+## Recent Changes (October 9, 2025)
+- ✅ **Instant Claim System** - Simplified campground ownership workflow
+  - One-click claim process - no admin approval required
+  - Immediate role upgrade to "owner" upon claiming
+  - Instant access to all owner features (forecasts, announcements, etc.)
+  - Automatic campground verification and ownership linking
+  - Verified owner badge appears immediately after claiming
+
+## Earlier Changes (October 6, 2025)
 - ✅ **Owner Dashboard** - Complete management interface for verified owners
   - Forecast Manager: Set 7-day availability forecasts for all vehicle/tent types
   - Announcement Creator: Post updates and events with optional push notifications
   - Follower tracking: View follower counts for owned campgrounds
   - Multi-campground support: Manage multiple verified campgrounds
-- ✅ **Claim System** - Campground ownership verification workflow
-  - Claim button on campground detail pages (for campers)
-  - Email-based verification (ownerEmail field in claims)
-  - Admin approval workflow through existing admin panel
-  - Automatic role upgrade to "owner" upon approval
 - ✅ **Verified Owner Badges** - Visual trust indicators
   - Checkmark badges on campground detail page headers
   - Mini badges on map markers for verified campgrounds
@@ -97,11 +100,11 @@ SpotFree is a progressive web app that provides real-time campground availabilit
    - Title and message input
    - Optional push notification flag
    - Recent announcements history display
-4. ✅ **Claim Workflow** - Ownership verification
-   - "Claim as Owner" button on unclaimed campgrounds
-   - Email and proof of ownership submission
-   - Admin review and approval system
-   - Automatic role and permission updates
+4. ✅ **Instant Claim Workflow** - Self-service ownership
+   - "Claim as Owner" button on any campground detail page
+   - Email and optional proof of ownership fields
+   - Instant approval and owner access (no admin review needed)
+   - Automatic role upgrade and campground verification
 5. ✅ **Verified Badges** - Trust indicators across the app
    - Map marker overlays with checkmark icons
    - Detail page header badges
@@ -134,9 +137,8 @@ SpotFree is a progressive web app that provides real-time campground availabilit
 - `GET /api/follows` - User's followed campground IDs (requires auth)
 
 ### Claims (Ownership)
-- `POST /api/claims` - Submit ownership claim (requires auth)
-- `GET /api/admin/claims` - List pending claims (admin only)
-- `PATCH /api/admin/claims/:id` - Approve/reject claim (admin only)
+- `POST /api/claims` - Submit ownership claim and get instant owner access (requires auth)
+- `GET /api/admin/claims` - List all claims for record-keeping (admin only)
 
 ### Forecasts (Owner only)
 - `POST /api/forecasts` - Create/update availability forecast (owner only)
