@@ -5,7 +5,15 @@ SpotFree is a progressive web app that provides real-time campground availabilit
 
 **Current Status:** Core functionality complete with Google Maps integration and PWA support. The app is centered on Engadin, Switzerland region with interactive map on the home screen.
 
-## Recent Changes (October 9, 2025)
+## Recent Changes (October 10, 2025)
+- ✅ **Owner Forecasts in Timeline** - Forecasts now appear in "Recent Reports" section
+  - GET /api/campgrounds/:id/reports returns combined reports and forecasts
+  - Chronologically sorted with future forecasts appearing first
+  - Forecasts labeled as "Owner Forecast" with "OF" initials and verified badge
+  - Date-aware labels: "For today", "For tomorrow", or "For [date]"
+  - Seamlessly integrated with existing ReportTimeline component
+
+## Earlier Changes (October 9, 2025)
 - ✅ **Availability Forecast Filter for Travelers** - Real-time forecast visualization on map
   - Date selector for next 7 days
   - Accommodation type filter (motorhome, caravan, VW bus, large tent, small tent)
