@@ -17,7 +17,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useParams } from "wouter";
 import type { Campground } from "@shared/schema";
 import lakesideImage from "@assets/generated_images/Lakeside_campground_landscape_a490e214.png";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format, isToday, isTomorrow, differenceInDays } from "date-fns";
 
 type CampgroundWithAvailability = Campground & {
   motorhomeAvailability?: number | null;
@@ -34,11 +34,14 @@ interface ReportWithUser {
   vwBusAvailability?: number | null;
   largeTentAvailability?: number | null;
   smallTentAvailability?: number | null;
-  createdAt: string;
-  userId: string;
+  createdAt?: string;
+  date?: string;
+  userId?: string;
   user?: {
     name: string;
   };
+  type?: 'report' | 'forecast';
+  campgroundId?: string;
 }
 
 export default function CampgroundDetail() {
@@ -124,18 +127,39 @@ export default function CampgroundDetail() {
     );
   }
 
-  const formattedReports = reports?.map((report) => ({
-    id: report.id,
-    userName: report.user?.name || "Anonymous",
-    userInitials: (report.user?.name || "A").substring(0, 2).toUpperCase(),
-    motorhomeAvailability: report.motorhomeAvailability,
-    caravanAvailability: report.caravanAvailability,
-    vwBusAvailability: report.vwBusAvailability,
-    largeTentAvailability: report.largeTentAvailability,
-    smallTentAvailability: report.smallTentAvailability,
-    verified: false,
-    timestamp: formatDistanceToNow(new Date(report.createdAt), { addSuffix: true }),
-  })) || [];
+  const formatForecastDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    if (isToday(date)) {
+      return "For today";
+    } else if (isTomorrow(date)) {
+      return "For tomorrow";
+    } else {
+      const days = differenceInDays(date, new Date());
+      if (days <= 7) {
+        return `For ${format(date, 'EEEE, MMM d')}`;
+      }
+      return `For ${format(date, 'MMM d, yyyy')}`;
+    }
+  };
+
+  const formattedReports = reports?.map((report) => {
+    const isForecast = report.type === 'forecast';
+    
+    return {
+      id: report.id,
+      userName: isForecast ? "Owner Forecast" : (report.user?.name || "Anonymous"),
+      userInitials: isForecast ? "OF" : (report.user?.name || "A").substring(0, 2).toUpperCase(),
+      motorhomeAvailability: report.motorhomeAvailability,
+      caravanAvailability: report.caravanAvailability,
+      vwBusAvailability: report.vwBusAvailability,
+      largeTentAvailability: report.largeTentAvailability,
+      smallTentAvailability: report.smallTentAvailability,
+      verified: isForecast,
+      timestamp: isForecast 
+        ? formatForecastDate(report.date!) 
+        : formatDistanceToNow(new Date(report.createdAt!), { addSuffix: true }),
+    };
+  }) || [];
 
   return (
     <div className="min-h-screen">

@@ -153,8 +153,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const reports = await storage.getRecentReports(id, 12);
+      const forecasts = await storage.getForecasts(id, 7);
 
-      res.json(reports);
+      // Combine reports and forecasts with normalized timestamps
+      const combinedData = [
+        ...reports.map(report => ({ 
+          ...report, 
+          type: 'report' as const,
+          sortTimestamp: new Date(report.createdAt).getTime()
+        })),
+        ...forecasts.map(forecast => ({ 
+          ...forecast, 
+          type: 'forecast' as const,
+          sortTimestamp: new Date(forecast.date).getTime()
+        }))
+      ];
+
+      // Sort by timestamp in descending order (newest first)
+      combinedData.sort((a, b) => b.sortTimestamp - a.sortTimestamp);
+
+      res.json(combinedData);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch reports" });
     }
